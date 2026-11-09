@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>착한구두 브랜드검색 검수기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: 왼쪽 영역별 입력·검수 카드, 오른쪽 고정 모바일 미리보기. 좁은 화면에선 미리보기가 위로. */
+:root{
+  color-scheme:light;
+  --bg:#f2f3f1; --panel:#ffffff; --field:#fafbf9; --ink:#1b1f1d; --mute:#5d6560; --line:#dde1dc;
+  --accent:#0d6b56; --accent-ink:#ffffff; --accent-soft:#e3f1ec;
+  --err:#c4302a; --err-bg:#fdeceb; --warn:#9a5a00; --warn-bg:#fff3dc; --ok:#1b7a3d; --ok-bg:#e6f4eb;
+  --a-home:#2a2e2b; --a-event:#1c9a38; --a-main:#2b3bf0; --a-sub:#b01cc2; --a-sns:#df1f2d;
+  --frame:#1d211f; --shadow:0 1px 2px rgba(20,30,25,.06),0 8px 24px rgba(20,30,25,.06); --scrim:rgba(10,14,12,.45);
+  --pv-bg:#ffffff; --pv-ink:#111111; --pv-gray:#707070; --pv-line:#ebebeb; --pv-tab:#f1f2f3; --pv-blue:#1a6be0; --pv-sub:#e8434f; --pv-ph:#f3f3f3; --pv-ph-ink:#a3a3a3; --pv-card:#f7f7f8;
+  --f-ui:'IBM Plex Sans KR',system-ui,-apple-system,'Malgun Gothic',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  --f-pv:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121514; --panel:#1b1f1d; --field:#161a18; --ink:#e7ebe8; --mute:#9aa39d; --line:#2c322f;
+  --accent:#4cc4a0; --accent-ink:#08140f; --accent-soft:#16302a;
+  --err:#ff7e74; --err-bg:#3a1917; --warn:#f2b45a; --warn-bg:#33270f; --ok:#6fd590; --ok-bg:#142d1d;
+  --a-home:#cdd3cf; --a-event:#4dc56b; --a-main:#8f99ff; --a-sub:#e274f2; --a-sns:#ff6d77;
+  --frame:#000000; --shadow:none; color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5}
+img{max-width:100%}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{position:sticky;top:0;z-index:6;background:var(--panel);border-bottom:1px solid var(--line);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.brand{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.brand b{font-size:17px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.brand span{font-size:12px;color:var(--mute)}
+.tally{display:flex;gap:6px;align-items:center;font-family:var(--f-mono);font-size:12.5px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--mute)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--err);border-color:var(--err)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.primary:disabled{background:var(--field);color:var(--mute);border-color:var(--line);opacity:1}
+.btn.sm{padding:4px 9px;font-size:12.5px;border-radius:6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.sync{font-size:12.5px;font-weight:500;border-radius:999px;padding:3px 10px;background:var(--field);color:var(--mute);border:1px solid var(--line)}
+.sync.ok{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.sync.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.sync.err{background:var(--err-bg);color:var(--err);border-color:transparent}
+.sync:empty{display:none}
+#editor[inert]{opacity:.72}
+
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.err{background:var(--err-bg);color:var(--err)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+
+.notice-wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.notice{max-width:1240px;margin:14px auto 0;background:var(--accent-soft);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--ink)}
+
+.wrap{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:24px;align-items:start;padding-block:18px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.editor{display:flex;flex-direction:column;gap:16px;min-width:0}
+.pv-col{min-width:0}
+.pv-sticky{position:sticky;top:96px;display:flex;flex-direction:column;gap:12px}
+@media (max-width:920px){.wrap{grid-template-columns:minmax(0,1fr)}.pv-col{order:-1}.pv-sticky{position:static}}
+
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:14px;scroll-margin-top:110px;transition:box-shadow .3s}
+.sec.flash{box-shadow:0 0 0 3px var(--ac)}
+.sec-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec-h .dot{width:10px;height:10px;border-radius:3px;background:var(--ac);flex:none}
+.sec-h h2{font-size:15.5px;margin:0;font-weight:700}
+.sec-h .gl{font-size:12.5px;text-decoration:none;border-bottom:1px solid currentColor}
+.sec-h .st{margin-left:auto}
+.sec-note{font-size:12.5px;color:var(--mute);margin:-6px 0 0}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld-h{display:flex;align-items:baseline;gap:8px}
+.fld-h label{font-size:12.5px;font-weight:600;color:var(--mute)}
+.cnt{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.cnt.over{color:var(--err);font-weight:500}
+.fld input[type=text],.fld input[type=url],.fld input[type=password],.fld textarea,.fld select{width:100%;border:1px solid var(--line);background:var(--field);border-radius:7px;padding:8px 10px;min-width:0}
+.fld textarea{resize:vertical;min-height:58px}
+.fld.is-err input,.fld.is-err textarea{border-color:var(--err)}
+.fld.is-warn input,.fld.is-warn textarea{border-color:var(--warn)}
+.iss{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.iss li{font-size:12.5px;display:flex;gap:6px;align-items:flex-start;line-height:1.45}
+.iss li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;margin-top:6px}
+.iss li.err{color:var(--err)} .iss li.err::before{background:var(--err)}
+.iss li.warn{color:var(--warn)} .iss li.warn::before{background:var(--warn)}
+
+.slot{display:flex;gap:12px;align-items:flex-start;border:1px dashed var(--line);border-radius:9px;padding:10px;background:var(--field);min-width:0}
+.slot.drag{border-color:var(--accent);background:var(--accent-soft)}
+.slot-prev{flex:none;width:64px;height:64px;border-radius:6px;background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 7px);display:grid;place-items:center;overflow:hidden;font-family:var(--f-mono);font-size:10px;color:var(--mute);text-align:center}
+.slot-prev.wide{width:120px}
+.slot-prev img{width:100%;height:100%;object-fit:contain}
+.slot-body{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.slot-t{font-size:12.5px;font-weight:600;color:var(--mute)}
+.slot-meta{font-family:var(--f-mono);font-size:12px;overflow-wrap:anywhere}
+.slot-acts{display:flex;gap:6px;flex-wrap:wrap}
+.slot input[type=file]{display:none}
+
+.tabblk{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:12px}
+.tabblk-h{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px}
+.thumbs3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.thumbs3{grid-template-columns:minmax(0,1fr)}}
+.thumbcard{display:flex;flex-direction:column;gap:9px;border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0}
+.thumbcard .slot{flex-direction:column;align-items:stretch}
+.thumbcard .slot-prev{width:100%;height:auto;aspect-ratio:1;max-width:100%}
+.thumbcard-h{font-size:12px;font-weight:600;color:var(--mute)}
+
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.checks label{display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:13.5px}
+.checks input{margin-top:3px;accent-color:var(--accent)}
+.checks small{display:block;color:var(--mute);font-size:12px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12.5px;min-width:0}
+.step b{display:block;font-size:13px;margin-bottom:2px}
+
+.sum{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.sum-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px}
+.sum-rows{display:flex;flex-direction:column;gap:4px}
+.sum-row{display:flex;align-items:center;gap:8px;border:0;background:none;padding:4px 6px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.sum-row:hover{background:var(--field)}
+.sum-row .dot{width:8px;height:8px;border-radius:2px;background:var(--ac);flex:none}
+.sum-row .nm{flex:1;font-size:13px}
+.hint{font-size:12px;color:var(--mute);text-align:center;margin:0}
+
+/* ===== phone preview (실제 검색결과 라이트 화면 재현, 테마 무관 고정) ===== */
+.phone{width:360px;max-width:100%;margin:0 auto;border:9px solid var(--frame);border-radius:30px;background:var(--pv-bg);overflow:hidden;color:var(--pv-ink);font-family:var(--f-pv);font-size:14px;line-height:1.4}
+.pv-bar{height:22px;background:var(--pv-bg)}
+.pv-q{margin:0 14px 10px;border:2px solid var(--pv-line);border-radius:22px;padding:7px 14px;font-size:14px;color:var(--pv-ink);font-weight:500}
+.pv{border-top:6px solid var(--pv-tab)}
+.pv [data-area]{position:relative;cursor:pointer}
+.pv [data-area]:hover{outline:2px solid var(--hc);outline-offset:-2px}
+.pv-top{display:flex;align-items:center;gap:10px;padding:12px 14px 10px}
+.pv-logo{height:44px;min-width:40px;max-width:170px;display:flex;align-items:center;flex:none}
+.pv-logo img{height:44px;width:auto;max-width:170px;object-fit:contain}
+.pv-logo .ph{height:44px;width:110px;border:1px solid var(--pv-line);display:grid;place-items:center;font-size:10.5px;color:var(--pv-ph-ink);background:var(--pv-ph)}
+.pv-slogan{color:var(--pv-blue);font-weight:500;font-size:15px;min-width:0;flex:1}
+.pv-ad{flex:none;font-size:10px;color:var(--pv-gray);border:1px solid var(--pv-line);border-radius:9px;padding:0 6px;line-height:16px}
+.pv-event{display:flex;align-items:center;gap:6px;margin:0 14px;padding:9px 0;border-top:1px solid var(--pv-line);border-bottom:1px solid var(--pv-line);font-size:13.5px}
+.pv-ic{width:18px;height:18px;border-radius:50%;background:var(--pv-blue);flex:none;display:grid;place-items:center}
+.pv-ic::before{content:"";width:7px;height:6px;background:var(--pv-bg);clip-path:polygon(0 25%,45% 25%,100% 0,100% 100%,45% 75%,0 75%)}
+.pv-lbl{color:var(--pv-blue);font-weight:700;flex:none}
+.pv-etxt{min-width:0;flex:1}
+.pv-chev{color:var(--pv-gray);flex:none;font-size:16px;line-height:1}
+.pv-main{display:flex;gap:12px;padding:12px 14px}
+.pv-mimg{flex:none;width:104px;height:104px;border-radius:6px;overflow:hidden;background:var(--pv-ph);display:grid;place-items:center;font-size:10.5px;color:var(--pv-ph-ink)}
+.pv-mimg img,.pv-th-img img,.pv-snsimg img{width:100%;height:100%;object-fit:cover;display:block}
+.pv-mtx{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:1px}
+.pv-msub{color:var(--pv-sub);font-size:12.5px}
+.pv-mtitle{font-weight:700;font-size:17px;letter-spacing:-.02em}
+.pv-mdesc{color:var(--pv-gray);font-size:13.5px}
+.clamp{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.pv-tabs{margin:2px 0 0}
+.pv-tl{display:flex;background:var(--pv-tab)}
+.pv-tab{flex:1;border:0;background:var(--pv-tab);color:var(--pv-gray);padding:10px 4px;font-family:var(--f-pv);font-size:13.5px;cursor:pointer;min-width:0}
+.pv-tab.on{background:var(--pv-bg);color:var(--pv-ink);font-weight:700}
+.pv-ths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 14px 14px}
+.pv-th{min-width:0;display:flex;flex-direction:column;gap:6px;text-align:center}
+.pv-th-img{aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--pv-ph);display:grid;place-items:center;font-size:10px;color:var(--pv-ph-ink)}
+.pv-th-tx{font-size:13px}
+.pv-sns{border-top:6px solid var(--pv-tab);padding:14px 14px 18px}
+.pv-sns h4{margin:0 0 10px;font-size:15px;font-weight:500}
+.pv-card{display:flex;gap:10px;background:var(--pv-card);border-radius:10px;padding:12px;margin-top:8px}
+.pv-ctx{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+.pv-cap{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pv-acc{font-size:11.5px;color:var(--pv-gray)}
+.pv-snsimg{flex:none;width:68px;height:68px;border-radius:8px;overflow:hidden;background:var(--pv-ph);display:grid;place-items:center;font-size:10px;color:var(--pv-ph-ink)}
+.pv-foot{height:14px}
+
+.ov{position:fixed;inset:0;z-index:20;background:var(--scrim);display:grid;place-items:center;padding:16px}
+.ov-box{background:var(--panel);color:var(--ink);border-radius:14px;width:min(720px,100%);max-height:100%;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.ov-box h3{margin:0;font-size:16px}
+.ov-box ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.lim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.lim-grid{grid-template-columns:minmax(0,1fr)}}
+.lim-grid .fld input{width:100%;border:1px solid var(--line);background:var(--field);border-radius:7px;padding:7px 10px}
+.src{font-size:11px;font-weight:600;border-radius:4px;padding:0 5px}
+.src.pdf{background:var(--ok-bg);color:var(--ok)}
+.src.tbd{background:var(--warn-bg);color:var(--warn)}
+.ov-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.ov-foot .msg{margin-right:auto;font-size:12.5px;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><b>착한구두 브랜드검색 검수기</b><span>모바일 라이트형 · 영역별 문구 검수와 최종 노출 미리보기</span></div>
+    <span class="sync" id="sync" role="status"></span>
+    <button class="btn sm" id="btnLoadRemote" type="button" hidden>새 저장본 불러오기</button>
+    <div class="tally" id="tally"></div>
+    <div class="actions">
+      <button class="btn" id="btnLimits" type="button">검수 기준</button>
+      <button class="btn" id="btnToken" type="button">저장 설정</button>
+      <button class="btn" id="btnReset" type="button">1안으로 되돌리기</button>
+      <button class="btn" id="btnReq" type="button">요청서 다운로드</button>
+      <button class="btn" id="btnDiscard" type="button" hidden>변경 취소</button>
+      <button class="btn primary" id="btnSave" type="button" disabled>저장하기</button>
+    </div>
+  </div>
+</header>
+<div class="notice-wrap"><p class="notice">이미지 규격(로고 80~960×88~160px, 메인 208×208px, 서브 240×240px)은 첨부 PDF 기준이고, 글자 수 한도는 기본값이라 각 영역의 ‘가이드 ↗’ 원문과 대조 후 <b>검수 기준</b>에서 수정하세요. 이미지는 아무 크기나 넣으면 규격에 맞게 자동으로 잘라 넣어요(가운데 기준). 수정한 뒤 <b>저장하기</b>(Ctrl+S)를 눌러야 저장되고, 마지막으로 저장한 버전이 모든 PC에 똑같이 보여요. 다른 PC에 반영되기까지 1분 정도 걸려요.</p></div>
+
+<main class="wrap">
+  <section class="editor" id="editor" aria-label="영역별 입력"></section>
+  <aside class="pv-col" aria-label="미리보기">
+    <div class="pv-sticky">
+      <div class="sum" id="sum"></div>
+      <div class="phone"><div class="pv-bar"></div><div class="pv-q">착한구두</div><div class="pv" id="pv"></div></div>
+      <p class="hint">미리보기 영역을 누르면 해당 입력 칸으로 이동해요</p>
+    </div>
+  </aside>
+</main>
+
+<div class="ov" id="ovLim" hidden>
+  <div class="ov-box" role="dialog" aria-modal="true" aria-labelledby="limTitle">
+    <h3 id="limTitle">검수 기준</h3>
+    <p class="sec-note" style="margin:0"><span class="src pdf">PDF 확인</span> 첨부 PDF에 표기된 값 · <span class="src tbd">원문 확인</span> 기본값이므로 네이버 가이드 원문과 대조 필요. 바꾼 기준도 저장하기를 눌러야 모두에게 반영돼요.</p>
+    <div class="lim-grid" id="limGrid"></div>
+    <div class="ov-foot"><button class="btn" type="button" id="btnLimReset">기본값 복원</button><button class="btn primary" type="button" data-close="ovLim">적용</button></div>
+  </div>
+</div>
+
+<div class="ov" id="ovTok" hidden>
+  <div class="ov-box" role="dialog" aria-modal="true" aria-labelledby="tokTitle">
+    <h3 id="tokTitle">저장 설정</h3>
+    <p class="sec-note" style="margin:0">저장하기를 누르면 GitHub 저장소 <b id="repoName"></b>의 데이터 파일이 갱신돼요. 저장하는 사람만 이 PC에서 한 번 GitHub 토큰을 넣으면 돼요. 보기만 하는 사람은 필요 없어요. 토큰은 이 브라우저에만 보관되고 다른 곳으로 보내지지 않아요.</p>
+    <ol>
+      <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 토큰 만들기 페이지 ↗</a>를 엽니다 (저장소에 쓰기 권한이 있는 계정으로 로그인).</li>
+      <li>Repository access에서 <b>Only select repositories</b> → 이 저장소만 고릅니다.</li>
+      <li>Permissions → Repository permissions → <b>Contents: Read and write</b>로 설정합니다.</li>
+      <li>Generate token을 누르고 나온 값을 아래에 붙여 넣습니다.</li>
+    </ol>
+    <div class="fld"><div class="fld-h"><label for="tokIn">GitHub 토큰</label><span class="cnt" id="tokState"></span></div><input type="password" id="tokIn" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></div>
+    <div class="ov-foot"><span class="msg" id="tokMsg"></span><button class="btn" type="button" id="btnTokDel">이 PC에서 토큰 지우기</button><button class="btn" type="button" data-close="ovTok">닫기</button><button class="btn primary" type="button" id="btnTokSave">토큰 확인 후 저장</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const REPO=(()=>{const m=location.hostname.match(/^([^.]+)\.github\.io$/i); const seg=location.pathname.split('/').filter(Boolean)[0];
+  return {owner:m?m[1]:'chakanshoes', repo:(m&&seg&&!/\.html?$/.test(seg))?seg:'chaakan-brandsearch', branch:'main'};})();
+const TOKEN_KEY='chaakan-bsl-gh-token';
+const AREAS={
+  home:{name:'홈링크 영역',guide:'https://ads.naver.com/adguide/1649',c:'var(--a-home)'},
+  slogan:{name:'슬로건 영역',guide:'https://ads.naver.com/adguide/1649',c:'var(--a-home)'},
+  event:{name:'브랜드 이벤트 영역',guide:'https://ads.naver.com/adguide/1631',c:'var(--a-event)'},
+  main:{name:'메인 콘텐츠 영역',guide:'https://ads.naver.com/adguide/1627',c:'var(--a-main)'},
+  sub:{name:'서브 콘텐츠 영역',guide:'https://ads.naver.com/adguide/1666',c:'var(--a-sub)'},
+  sns:{name:'브랜드 SNS 소식 영역',guide:'https://ads.naver.com/adguide/1624',c:'var(--a-sns)'}
+};
+const DEF_LIM={slogan:12,eventLabel:4,eventText:25,mainSub:15,mainTitle:15,mainDesc:20,tab:8,thumb:10,imgKB:500,countSpaces:true,allowed:".,!?'\"~%&()[]-+/:·"};
+const LIM_META=[
+  ['slogan','슬로건 문구 최대 글자','tbd'],['eventLabel','이벤트 라벨 최대 글자','tbd'],['eventText','이벤트 문구 최대 글자','tbd'],
+  ['mainSub','메인 서브타이틀 최대 글자','tbd'],['mainTitle','메인 타이틀 최대 글자','tbd'],['mainDesc','메인 설명문구(줄당) 최대 글자','tbd'],
+  ['tab','탭 이름 최대 글자','tbd'],['thumb','썸네일 텍스트 최대 글자','tbd'],['imgKB','이미지 최대 용량(KB)','tbd'],['allowed','허용 특수문자','tbd']
+];
+const P='https://chaakan.co.kr/product/detail.html?product_no=';
+const it=(text,no)=>({img:null,text,link:P+no});
+const SEED=()=>({
+  home:{logo:null,link:'https://chaakan.co.kr/',ref:'현재 사이트 로고 https://chaakan.co.kr/web/upload/img/footerLogo_ver2.png'},
+  slogan:{text:'착한구두 공식몰'},
+  event:{label:'새소식',text:'신규가입 시 무료배송 & 4,000원 쿠폰팩',link:'https://chaakan.co.kr/member/join.html'},
+  main:{img:null,ref:'F/W 부츠 연출컷 (예: 페탈 커스텀 멀티웨이 롱부츠 '+P+'4655)',sub:'26 F/W 신상 부츠',title:'편하다 그리고 착하다',d1:'발이 편한 착한구두 공식몰',d2:'부츠·방한화 신상품 출시',link:'https://chaakan.co.kr/product/list.html?cate_no=56'},
+  tabCount:2,
+  tabs:[
+    {name:'신상품',items:[it('브루어 앵클부츠',5110),it('페탈 롱부츠',4655),it('카민스 롱부츠',5016)]},
+    {name:'베스트',items:[it('샌더슨 페니로퍼',3229),it('앵클 삭스부츠',2500),it('오코넬 로퍼힐',3801)]},
+    {name:'방한슈즈',items:[it('풀문 방한부츠',4842),it('첼라 방한화',5017),it('포븐 어그슬리퍼',3710)]}
+  ],
+  sns:{handle:'chaakan_official',checks:{},posts:[{img:null,text:'포근한 퍼안감 방한화, 이번 주 신상으로 만나보세요'},{img:null,text:'출근룩에 딱 맞는 로퍼 코디 3가지'}]}
+});
+let S=SEED(), L=Object.assign({},DEF_LIM), pvTab=0, overflow=new Set(), lastIssues={};
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const get=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
+const set=(o,p,v)=>{const ks=p.split('.');const last=ks.pop();const t=ks.reduce((a,k)=>a[k],o);t[last]=v;};
+const pid=p=>p.replace(/\./g,'-');
+const $=s=>document.querySelector(s);
+
+/* ---------- field schema ---------- */
+function textFields(){
+  const f=[
+    {p:'slogan.text',label:'슬로건 문구',lim:'slogan',area:'slogan'},
+    {p:'event.label',label:'라벨',lim:'eventLabel',area:'event'},
+    {p:'event.text',label:'소식 문구',lim:'eventText',area:'event'},
+    {p:'main.sub',label:'서브타이틀',lim:'mainSub',area:'main'},
+    {p:'main.title',label:'타이틀',lim:'mainTitle',area:'main'},
+    {p:'main.d1',label:'설명문구 1줄',lim:'mainDesc',area:'main'},
+    {p:'main.d2',label:'설명문구 2줄',lim:'mainDesc',area:'main'}
+  ];
+  for(let t=0;t<3;t++){
+    f.push({p:`tabs.${t}.name`,label:`탭 ${t+1} 이름`,lim:'tab',area:'sub',tab:t});
+    for(let i=0;i<3;i++) f.push({p:`tabs.${t}.items.${i}.text`,label:'썸네일 텍스트',lim:'thumb',area:'sub',tab:t});
+  }
+  return f;
+}
+function linkFields(){
+  const f=[{p:'home.link',area:'home'},{p:'event.link',area:'event'},{p:'main.link',area:'main'}];
+  for(let t=0;t<3;t++) for(let i=0;i<3;i++) f.push({p:`tabs.${t}.items.${i}.link`,area:'sub',tab:t});
+  return f;
+}
+function imgFields(){
+  const f=[{p:'home.logo',rule:'logo',area:'home'},{p:'main.img',rule:'main',area:'main'}];
+  for(let t=0;t<3;t++) for(let i=0;i<3;i++) f.push({p:`tabs.${t}.items.${i}.img`,rule:'sub',area:'sub',tab:t});
+  return f;
+}
+const IMG_PATHS=()=>{const a=['home.logo','main.img'];for(let t=0;t<3;t++)for(let i=0;i<3;i++)a.push(`tabs.${t}.items.${i}.img`);a.push('sns.posts.0.img','sns.posts.1.img');return a;};
+
+/* ---------- checks ---------- */
+const SUPER=['최고','최초','최상','최저','최대','최다','최강','유일','1위','일등','넘버원','no.1','no1','가장','완벽','역대','국내 최','세계 최','100%'];
+const URGENT=['마감임박','마감 임박','단 하루','오늘만','지금 바로','서두르','놓치면','선착순','클릭'];
+const COMPARE=['타사','경쟁사','보다 더','대비 '];
+function count(s){s=String(s||'');if(!L.countSpaces)s=s.replace(/\s/g,'');return [...s].length;}
+function checkText(v,max){
+  const out=[]; v=String(v||'');
+  if(!v.trim()){out.push({lv:'err',msg:'필수 입력 항목이에요'});return out;}
+  const n=count(v); if(n>max) out.push({lv:'err',msg:`${n}자 — 최대 ${max}자를 ${n-max}자 넘었어요`});
+  const bad=new Set(); for(const ch of v){ if(/[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9 ]/.test(ch)) continue; if(L.allowed.includes(ch)) continue; bad.add(ch); }
+  if(bad.size) out.push({lv:'err',msg:`허용되지 않는 특수문자·이모지: ${[...bad].join(' ')}`});
+  if(/([^\w가-힣ㄱ-ㅎㅏ-ㅣ\s])\1/.test(v)) out.push({lv:'err',msg:'특수문자 반복 사용(!!, ~~, ... 등)은 쓸 수 없어요'});
+  const low=v.toLowerCase();
+  const sp=SUPER.filter(w=>low.includes(w)); if(sp.length) out.push({lv:'err',msg:`최상급·절대 표현 ‘${sp.join('’, ‘')}’ — 객관적 근거(출처·조사기관·기간) 없으면 반려돼요`});
+  if(/\d[\d,]*\s?원|%|할인|무료|특가|세일|sale|쿠폰|증정|적립|1\+1/i.test(v)) out.push({lv:'warn',msg:'가격·혜택 표현 — 랜딩 페이지에 같은 내용이 보여야 하고, 기간 한정이면 기간을 적어야 해요'});
+  const ur=URGENT.filter(w=>low.includes(w)); if(ur.length) out.push({lv:'warn',msg:`긴급·유도 표현 ‘${ur.join('’, ‘')}’ — 검수에서 수정 요청될 수 있어요`});
+  const cp=COMPARE.filter(w=>low.includes(w)); if(cp.length) out.push({lv:'warn',msg:`비교 표현 ‘${cp.join('’, ‘').trim()}’ — 비교 대상과 근거가 필요해요`});
+  if(/^\s|\s$/.test(v)) out.push({lv:'warn',msg:'앞뒤 공백이 있어요'});
+  if(/\s{2,}/.test(v)) out.push({lv:'warn',msg:'연속 공백이 있어요'});
+  return out;
+}
+function checkLink(v){
+  v=String(v||'').trim(); if(!v) return [{lv:'err',msg:'링크를 입력하세요'}];
+  let u; try{u=new URL(v);}catch(e){return [{lv:'err',msg:'URL 형식이 아니에요 (https://로 시작)'}];}
+  const o=[]; if(!/^https?:$/.test(u.protocol)) o.push({lv:'err',msg:'http(s) 링크만 쓸 수 있어요'});
+  else if(u.protocol==='http:') o.push({lv:'warn',msg:'https 링크를 권장해요'});
+  if(!/(^|\.)chaakan\.co\.kr$/.test(u.hostname)) o.push({lv:'warn',msg:'착한구두 도메인(chaakan.co.kr)이 아니에요 — 광고주 사이트 링크인지 확인하세요'});
+  return o;
+}
+function checkImg(img,rule){
+  if(!img) return [{lv:'warn',msg:'이미지 미등록 — 업로드하거나 대행사에 파일을 별도 전달하세요'}];
+  const o=[];
+  if(!/png|jpe?g|gif/i.test(img.type)) o.push({lv:'err',msg:`${img.type||'알 수 없는 형식'} — JPG·PNG·GIF만 사용하세요`});
+  if(img.kb>L.imgKB) o.push({lv:'err',msg:`용량 ${img.kb}KB — ${L.imgKB}KB 이하로 줄여야 해요`});
+  if(rule==='logo'){ if(img.w<80||img.w>960||img.h<88||img.h>160) o.push({lv:'err',msg:`${img.w}×${img.h}px — 가로 80~960px, 세로 88~160px 범위를 벗어났어요`}); }
+  if(rule==='main'||rule==='sub'){ const n=rule==='main'?208:240;
+    if(img.w!==n||img.h!==n){ if(img.w===img.h) o.push({lv:'warn',msg:`1:1 비율이지만 ${img.w}×${img.h}px — ${n}×${n}px로 리사이즈해서 전달하세요`}); else o.push({lv:'err',msg:`${img.w}×${img.h}px — ${n}×${n}px(1:1)이어야 해요`}); } }
+  return o;
+}
+function checkHandle(v){
+  v=String(v||'').trim().replace(/^@/,''); if(!v) return [{lv:'warn',msg:'SNS 소식 영역을 쓰려면 계정을 입력하세요'}];
+  if(!/^[A-Za-z0-9._]{1,30}$/.test(v)) return [{lv:'err',msg:'인스타그램 아이디 형식이 아니에요 (영문·숫자·밑줄·마침표, 30자 이내)'}];
+  return [];
+}
+
+/* ---------- editor ---------- */
+function secHead(area,extra){const a=AREAS[area];return `<div class="sec-h"><span class="dot"></span><h2>${a.name}</h2><a class="gl" href="${a.guide}" target="_blank" rel="noopener">가이드 ↗</a><span class="st" id="st-${area}"></span></div>${extra?`<p class="sec-note">${extra}</p>`:''}`;}
+function txt(spec){const id='f-'+pid(spec.p);return `<div class="fld" id="w-${id}"><div class="fld-h"><label for="${id}">${spec.label}</label><span class="cnt" id="c-${id}"></span></div><input type="text" id="${id}" data-path="${spec.p}" autocomplete="off"><ul class="iss" id="i-${id}"></ul></div>`;}
+function lnk(p,label='랜딩 링크'){const id='f-'+pid(p);return `<div class="fld" id="w-${id}"><div class="fld-h"><label for="${id}">${label}</label></div><input type="url" id="${id}" data-path="${p}" autocomplete="off" spellcheck="false"><ul class="iss" id="i-${id}"></ul></div>`;}
+function plain(p,label){const id='f-'+pid(p);return `<div class="fld"><div class="fld-h"><label for="${id}">${label}</label></div><input type="text" id="${id}" data-path="${p}" autocomplete="off"></div>`;}
+function slot(p,title,size,wide){const id='f-'+pid(p);return `<div class="slot" id="s-${id}" data-slot="${p}"><div class="slot-prev${wide?' wide':''}" id="sp-${id}">${size}</div><div class="slot-body"><span class="slot-t">${title} · ${size}</span><span class="slot-meta" id="sm-${id}">파일 없음</span><div class="slot-acts"><label class="btn sm" for="file-${id}">이미지 넣기</label><button class="btn sm" type="button" data-rm="${p}" id="rm-${id}" hidden>삭제</button></div><input type="file" id="file-${id}" accept="image/png,image/jpeg,image/gif,image/webp" data-file="${p}"><ul class="iss" id="i-${id}"></ul></div></div>`;}
+
+function buildEditor(){
+  const F=Object.fromEntries(textFields().map(f=>[f.p,f]));
+  let h='';
+  h+=`<section class="sec" id="sec-home" style="--ac:${AREAS.home.c}">${secHead('home','로고 이미지가 노출되고, 슬로건 영역과 같은 링크로 연결돼요.')}
+    ${slot('home.logo','로고 이미지','80~960 × 88~160',true)}
+    <div class="grid2">${lnk('home.link','홈 링크 (슬로건과 동일)')}${plain('home.ref','참고 메모 (대행사 전달용)')}</div></section>`;
+  h+=`<section class="sec" id="sec-slogan" style="--ac:${AREAS.slogan.c}">${secHead('slogan','로고 옆 파란 텍스트. 홈링크와 같은 링크로 연결돼요.')}${txt(F['slogan.text'])}</section>`;
+  h+=`<section class="sec" id="sec-event" style="--ac:${AREAS.event.c}">${secHead('event','‘새소식’ 줄. 진행 중인 혜택·이벤트 한 줄 공지.')}
+    <div class="grid2">${txt(F['event.label'])}${txt(F['event.text'])}</div>${lnk('event.link')}</section>`;
+  h+=`<section class="sec" id="sec-main" style="--ac:${AREAS.main.c}">${secHead('main','왼쪽 208×208 이미지 + 서브타이틀·타이틀·설명 2줄.')}
+    ${slot('main.img','메인 이미지','208 × 208')}
+    ${plain('main.ref','참고 이미지 메모 (대행사 전달용)')}
+    <div class="grid2">${txt(F['main.sub'])}${txt(F['main.title'])}${txt(F['main.d1'])}${txt(F['main.d2'])}</div>${lnk('main.link')}</section>`;
+  h+=`<section class="sec" id="sec-sub" style="--ac:${AREAS.sub.c}">${secHead('sub','탭마다 240×240 썸네일 3개 + 썸네일 텍스트.')}
+    <div class="fld" style="max-width:220px"><div class="fld-h"><label for="f-tabCount">탭 개수</label></div><select id="f-tabCount" data-path="tabCount"><option value="2">2개</option><option value="3">3개</option></select></div>`;
+  for(let t=0;t<3;t++){
+    h+=`<div class="tabblk" data-tab="${t}"><div class="tabblk-h">탭 ${t+1}</div><div style="max-width:320px">${txt(F[`tabs.${t}.name`])}</div><div class="thumbs3">`;
+    for(let i=0;i<3;i++){const b=`tabs.${t}.items.${i}`;h+=`<div class="thumbcard"><span class="thumbcard-h">썸네일 ${i+1}</span>${slot(b+'.img','썸네일','240 × 240')}${txt(F[b+'.text'])}${lnk(b+'.link','링크')}</div>`;}
+    h+=`</div></div>`;
+  }
+  h+=`</section>`;
+  const checks=[
+    ['인스타그램 계정이 공개 상태이고 착한구두 공식 계정인지 확인','사이트 하단 인스타그램 링크와 같은 계정이어야 해요.'],
+    ['최근 게시물 캡션에 최상급·과장 표현이 없는지 확인','‘1위’, ‘최고’ 같은 표현이 든 게시물은 노출 전에 수정하거나 보관 처리하세요.'],
+    ['대행사에 SNS 소식 영역 사용과 계정 연결 요청','연동 조건(계정 유형·권한)은 가이드 원문 기준으로 대행사와 확인하세요.'],
+    ['연동 후 실제 검색 결과에서 최신 게시물이 보이는지 확인','게시물 삭제·비공개 시 반영 주기도 함께 확인해 두세요.']
+  ];
+  h+=`<section class="sec" id="sec-sns" style="--ac:${AREAS.sns.c}">${secHead('sns','선택 영역. 문구를 직접 쓰지 않고, 연결한 계정의 최신 게시물이 자동으로 노출돼요.')}
+    <div class="steps"><div class="step"><b>1. 계정 점검</b>공개 여부·프로필·최근 게시물 표현 확인</div><div class="step"><b>2. 대행사 요청</b>요청서에 계정과 URL을 담아 연동 요청</div><div class="step"><b>3. 노출 확인</b>검색 결과에서 게시물·썸네일 확인</div></div>
+    <div class="grid2"><div class="fld" id="w-f-sns-handle"><div class="fld-h"><label for="f-sns-handle">인스타그램 계정</label><span class="cnt" id="snsUrl"></span></div><input type="text" id="f-sns-handle" data-path="sns.handle" autocomplete="off" spellcheck="false"><ul class="iss" id="i-f-sns-handle"></ul></div></div>
+    <ul class="checks">${checks.map((c,i)=>`<li><label><input type="checkbox" data-path="sns.checks.${i}"><span>${c[0]}<small>${c[1]}</small></span></label></li>`).join('')}</ul>
+    <div class="tabblk"><div class="tabblk-h">미리보기용 게시물 (실제로는 계정 최신 게시물이 자동 노출)</div><div class="grid2">
+    ${[0,1].map(i=>`<div class="thumbcard">${slot(`sns.posts.${i}.img`,'게시물 이미지','1:1')}<div class="fld"><div class="fld-h"><label for="f-sns-posts-${i}-text">캡션 예시</label></div><textarea id="f-sns-posts-${i}-text" data-path="sns.posts.${i}.text"></textarea></div></div>`).join('')}
+    </div></div></section>`;
+  $('#editor').innerHTML=h;
+}
+function fill(skipFocus){
+  document.querySelectorAll('#editor [data-path]').forEach(el=>{if(skipFocus&&el===document.activeElement) return; const v=get(S,el.dataset.path); if(el.type==='checkbox') el.checked=!!v; else el.value=v??'';});
+}
+
+/* ---------- images: 넣으면 규격에 맞게 자동 맞춤 ---------- */
+function ruleOf(p){return p==='home.logo'?'logo':p==='main.img'?'main':p.startsWith('tabs.')?'sub':'sns';}
+function fitImage(im,rule){
+  const ow=im.naturalWidth, oh=im.naturalHeight, c=document.createElement('canvas'), x=c.getContext('2d');
+  x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
+  if(rule==='logo'){
+    let s=1; if(oh>160) s=160/oh; else if(oh<88) s=88/oh; if(ow*s>960) s=960/ow;
+    const w=Math.max(1,Math.round(ow*s)), h=Math.max(1,Math.round(oh*s)), cw=Math.max(80,w), ch=Math.min(160,Math.max(88,h));
+    c.width=cw; c.height=ch; x.drawImage(im,Math.round((cw-w)/2),Math.round((ch-h)/2),w,h);
+    return {src:c.toDataURL('image/png'),type:'image/png',w:cw,h:ch};
+  }
+  const n=rule==='main'?208:rule==='sub'?240:400, side=Math.min(ow,oh);
+  c.width=n; c.height=n; x.fillStyle='#ffffff'; x.fillRect(0,0,n,n);
+  x.drawImage(im,(ow-side)/2,(oh-side)/2,side,side,0,0,n,n);
+  return {src:c.toDataURL('image/jpeg',0.9),type:'image/jpeg',w:n,h:n};
+}
+function readImage(file,path){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{const im=new Image();
+    im.onload=()=>{const f=fitImage(im,ruleOf(path)); const kb=Math.max(1,Math.round(f.src.split(',')[1].length*3/4/1024));
+      set(S,path,{src:f.src,name:file.name,type:f.type,kb,w:f.w,h:f.h,ow:im.naturalWidth,oh:im.naturalHeight,okb:Math.round(file.size/1024),auto:true}); update();};
+    im.onerror=()=>{syncErr='이미지를 읽지 못했어요 — JPG·PNG 파일인지 확인하세요'; renderSaveUI();};
+    im.src=r.result;};
+  r.readAsDataURL(file);
+}
+function dataURLtoBlob(s){const i=s.indexOf(','); const mime=s.slice(5,i).split(';')[0]||'image/png'; const bin=atob(s.slice(i+1)); const u=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k); return new Blob([u],{type:mime});}
+function renderSlots(){
+  document.querySelectorAll('[data-slot]').forEach(el=>{
+    const p=el.dataset.slot, id='f-'+pid(p), img=get(S,p), pv=$('#sp-'+id);
+    if(!pv.dataset.ph) pv.dataset.ph=pv.textContent;
+    if(img&&img.src){pv.innerHTML=`<img alt="" src="${esc(img.src)}">`;}else pv.textContent=pv.dataset.ph;
+    $('#sm-'+id).textContent=img?((img.auto?`${img.name} · 원본 ${img.ow}×${img.oh} → ${img.w}×${img.h}px 자동 맞춤 · ${img.kb}KB`:`${img.name} · ${img.w}×${img.h}px · ${img.kb}KB`)+(!img.path?' · 저장 전':'')):'파일 없음';
+    $('#rm-'+id).hidden=!img;
+  });
+}
+
+/* ---------- preview ---------- */
+function renderPreview(){
+  const n=+S.tabCount||2; if(pvTab>=n) pvTab=0;
+  const isrc=im=>im&&im.src?esc(im.src):'';
+  const logo=isrc(S.home.logo)?`<img alt="로고" src="${isrc(S.home.logo)}">`:`<span class="ph">로고 80~960×88~160</span>`;
+  const mimg=isrc(S.main.img)?`<img alt="" src="${isrc(S.main.img)}">`:'208 × 208';
+  const tab=S.tabs[pvTab];
+  let h=`<div class="pv-top" data-area="home" style="--hc:${AREAS.home.c}"><div class="pv-logo">${logo}</div><span class="pv-slogan clamp" data-f="slogan.text" data-area="slogan" style="--hc:${AREAS.slogan.c}">${esc(S.slogan.text)}</span><span class="pv-ad">광고</span></div>
+  <div class="pv-event" data-area="event" style="--hc:${AREAS.event.c}"><span class="pv-ic"></span><b class="pv-lbl" data-f="event.label">${esc(S.event.label)}</b><span class="pv-etxt clamp" data-f="event.text">${esc(S.event.text)}</span><span class="pv-chev">›</span></div>
+  <div class="pv-main" data-area="main" style="--hc:${AREAS.main.c}"><div class="pv-mimg">${mimg}</div><div class="pv-mtx">
+    <span class="pv-msub clamp" data-f="main.sub">${esc(S.main.sub)}</span><span class="pv-mtitle clamp" data-f="main.title">${esc(S.main.title)}</span>
+    <span class="pv-mdesc clamp" data-f="main.d1">${esc(S.main.d1)}</span><span class="pv-mdesc clamp" data-f="main.d2">${esc(S.main.d2)}</span></div></div>
+  <div class="pv-tabs" data-area="sub" style="--hc:${AREAS.sub.c}"><div class="pv-tl" role="tablist">`;
+  for(let t=0;t<n;t++) h+=`<button type="button" role="tab" class="pv-tab clamp${t===pvTab?' on':''}" data-pvtab="${t}" data-f="tabs.${t}.name" aria-selected="${t===pvTab}">${esc(S.tabs[t].name)}</button>`;
+  h+=`</div><div class="pv-ths">`;
+  tab.items.forEach((x,i)=>{h+=`<div class="pv-th"><div class="pv-th-img">${isrc(x.img)?`<img alt="" src="${isrc(x.img)}">`:'240 × 240'}</div><span class="pv-th-tx clamp" data-f="tabs.${pvTab}.items.${i}.text">${esc(x.text)}</span></div>`;});
+  h+=`</div></div>`;
+  const handle=String(S.sns.handle||'').trim().replace(/^@/,'');
+  if(handle){
+    h+=`<div class="pv-sns" data-area="sns" style="--hc:${AREAS.sns.c}"><h4>브랜드 SNS 소식</h4>`;
+    S.sns.posts.forEach((p,i)=>{h+=`<div class="pv-card"><div class="pv-ctx"><span class="pv-cap">${esc(p.text)}</span><span class="pv-acc">Instagram · @${esc(handle)} · ${i?'5일 전':'2일 전'}</span></div><div class="pv-snsimg">${isrc(p.img)?`<img alt="" src="${isrc(p.img)}">`:'IMG'}</div></div>`;});
+    h+=`</div>`;
+  }
+  h+=`<div class="pv-foot"></div>`;
+  $('#pv').innerHTML=h;
+}
+function measure(){
+  overflow=new Set();
+  document.querySelectorAll('#pv [data-f]').forEach(el=>{if(el.classList.contains('clamp')&&el.scrollWidth>el.clientWidth+1) overflow.add(el.dataset.f);});
+  const probe=document.querySelector('#pv .pv-th-tx');
+  if(probe){const w=probe.clientWidth; const m=document.createElement('span'); m.className='pv-th-tx'; m.style.cssText='position:absolute;visibility:hidden;white-space:nowrap;font-family:var(--f-pv)'; $('#pv').appendChild(m);
+    for(let t=0;t<(+S.tabCount||2);t++){ if(t===pvTab) continue; S.tabs[t].items.forEach((x,i)=>{m.textContent=x.text; if(m.offsetWidth>w+1) overflow.add(`tabs.${t}.items.${i}.text`);});}
+    m.remove();}
+}
+
+/* ---------- run checks ---------- */
+function runChecks(){
+  const per={}; Object.keys(AREAS).forEach(a=>per[a]={err:0,warn:0});
+  const all=[]; const n=+S.tabCount||2;
+  const show=(id,iss)=>{const ul=$('#i-'+id); if(ul) ul.innerHTML=iss.map(x=>`<li class="${x.lv}">${esc(x.msg)}</li>`).join(''); const w=$('#w-'+id); if(w){w.classList.toggle('is-err',iss.some(x=>x.lv==='err'));w.classList.toggle('is-warn',!iss.some(x=>x.lv==='err')&&iss.some(x=>x.lv==='warn'));}};
+  const add=(spec,iss,label)=>{ if(spec.tab!=null&&spec.tab>=n) return; iss.forEach(x=>{per[spec.area][x.lv]++; all.push({area:spec.area,label,lv:x.lv,msg:x.msg});}); };
+  textFields().forEach(f=>{
+    const id='f-'+pid(f.p), v=get(S,f.p), max=L[f.lim];
+    const iss=checkText(v,max);
+    if(overflow.has(f.p)) iss.push({lv:'warn',msg:'미리보기에서 말줄임(…)이 생겨요 — 실제 화면에서 잘려 보일 수 있어요'});
+    const c=$('#c-'+id); if(c){const k=count(v); c.textContent=`${k} / ${max}자`; c.classList.toggle('over',k>max);}
+    show(id,iss); add(f,iss,(f.tab!=null?`탭${f.tab+1} `:'')+f.label+(f.p.includes('items')?` ${+f.p.split('.')[3]+1}`:''));
+  });
+  linkFields().forEach(f=>{const id='f-'+pid(f.p), iss=checkLink(get(S,f.p)); show(id,iss); add(f,iss,(f.tab!=null?`탭${f.tab+1} 썸네일${+f.p.split('.')[3]+1} `:'')+'링크');});
+  imgFields().forEach(f=>{const id='f-'+pid(f.p), iss=checkImg(get(S,f.p),f.rule); show(id,iss); add(f,iss,f.rule==='logo'?'로고 이미지':f.rule==='main'?'메인 이미지':`탭${f.tab+1} 썸네일${+f.p.split('.')[3]+1} 이미지`);});
+  const hs=checkHandle(S.sns.handle); show('f-sns-handle',hs); add({area:'sns'},hs,'인스타그램 계정');
+  const hd=String(S.sns.handle||'').trim().replace(/^@/,''); $('#snsUrl').textContent=hd?`instagram.com/${hd}`:'';
+  document.querySelectorAll('.tabblk[data-tab]').forEach(b=>b.hidden=+b.dataset.tab>=n);
+  lastIssues={per,all};
+  let E=0,W=0; Object.values(per).forEach(x=>{E+=x.err;W+=x.warn;});
+  const pill=x=>x.err?`<span class="pill err">위반 ${x.err}</span>${x.warn?` <span class="pill warn">주의 ${x.warn}</span>`:''}`:x.warn?`<span class="pill warn">주의 ${x.warn}</span>`:`<span class="pill ok">통과</span>`;
+  Object.keys(AREAS).forEach(a=>{const el=$('#st-'+a); if(el) el.innerHTML=pill(per[a]);});
+  $('#tally').innerHTML=`<span class="pill err">위반 ${E}</span><span class="pill warn">주의 ${W}</span>`;
+  $('#sum').innerHTML=`<div class="sum-h">검수 결과 ${E?`<span class="pill err">위반 ${E}</span>`:'<span class="pill ok">위반 없음</span>'}${W?`<span class="pill warn">주의 ${W}</span>`:''}</div><div class="sum-rows">${Object.keys(AREAS).map(a=>`<button type="button" class="sum-row" data-go="${a}" style="--ac:${AREAS[a].c}"><span class="dot"></span><span class="nm">${AREAS[a].name}</span>${pill(per[a])}</button>`).join('')}</div>`;
+}
+
+/* ---------- 저장: GitHub 저장소의 data.json이 최종 저장본. 저장하기를 눌러야 갱신 ---------- */
+let mode='loading', lastSaved=null, writing=false, dirty=false, pendingRemote=null, lastSent='', syncErr='', conflict=false, savedHereAt=0;
+const fmtT=t=>{if(!t) return ''; const d=new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
+const getToken=()=>{try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return '';}};
+function cmpState(){const c=JSON.parse(JSON.stringify(S)); IMG_PATHS().forEach(p=>{const im=get(c,p); if(im){ if(im.path) delete im.src; else if(im.src) im.src='local:'+im.src.length; }}); return c;}
+function curJson(){return JSON.stringify([cmpState(),L]);}
+function deserialize(st){const c=JSON.parse(JSON.stringify(st)); IMG_PATHS().forEach(p=>{const im=get(c,p); if(im&&im.path) im.src=im.path;}); return c;}
+function renderSaveUI(){
+  const b=$('#btnSave'), el=$('#sync');
+  $('#btnDiscard').hidden=!(mode==='ready'&&dirty);
+  b.disabled=mode!=='ready'||!dirty||writing;
+  b.textContent=writing?'저장 중…':conflict?'덮어쓰고 저장':dirty?'저장하기':'저장됨';
+  b.classList.toggle('danger',conflict);
+  let t,c='';
+  if(syncErr){t=syncErr;c='err';}
+  else if(mode==='loading') t='최종 저장본 불러오는 중…';
+  else if(dirty){t='저장 안 된 변경 있음 · 저장하기를 눌러야 다른 PC에 반영돼요';c='warn';}
+  else if(savedHereAt&&Date.now()-savedHereAt<120000){t='저장 완료 · 다른 PC 반영까지 약 1분';c='ok';}
+  else if(lastSaved&&lastSaved.at){t=`최종 저장 ${fmtT(lastSaved.at)} · 모든 PC에 이 버전이 보여요`;c='ok';}
+  else t='아직 저장된 내용 없음';
+  el.textContent=t; el.className='sync '+c;
+  $('#btnLoadRemote').hidden=!pendingRemote;
+}
+function refreshDirty(){dirty=mode==='ready'&&curJson()!==lastSent; if(!dirty) conflict=false; renderSaveUI();}
+function applyRemote(data){
+  if(!data||!data.state) return;
+  lastSaved=data; pendingRemote=null; conflict=false;
+  S=Object.assign(SEED(),deserialize(data.state));
+  L=Object.assign({},DEF_LIM,data.lim||{});
+  lastSent=curJson();
+  fill(true); update();
+}
+async function loadSaved(initial){
+  try{
+    const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error(r.status);
+    const d=await r.json();
+    if(initial){applyRemote(d);}
+    else if(d&&d.at&&(!lastSaved||!lastSaved.at||d.at>lastSaved.at)){ if(dirty){pendingRemote=d; renderSaveUI();} else applyRemote(d); }
+  }catch(e){
+    if(initial){syncErr='저장본(data.json)을 불러오지 못했어요 — 1안을 표시해요'; lastSent=curJson();}
+  }
+  if(initial){mode='ready'; $('#editor').inert=false; refreshDirty();}
+}
+async function gh(path,opt={}){
+  const r=await fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.repo}${path}`,{method:opt.method||'GET',cache:'no-store',
+    headers:Object.assign({'Authorization':'Bearer '+getToken(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},opt.body?{'Content-Type':'application/json'}:{}),
+    body:opt.body?JSON.stringify(opt.body):undefined});
+  if(!r.ok){const e=new Error('GitHub '+r.status); e.status=r.status; try{e.detail=(await r.json()).message;}catch(_){} throw e;}
+  return r.status===204?null:r.json();
+}
+function b64utf8(b64){const bin=atob(String(b64).replace(/\s/g,'')); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return new TextDecoder().decode(u);}
+async function saveNow(){
+  refreshDirty();
+  if(mode!=='ready'||!dirty||writing) return;
+  if(!getToken()){openToken('저장하려면 이 PC에 GitHub 토큰을 한 번 넣어야 해요.'); return;}
+  const force=conflict;
+  writing=true; syncErr=''; renderSaveUI();
+  try{
+    const ref=await gh(`/git/ref/heads/${REPO.branch}`); const headSha=ref.object.sha;
+    const head=await gh(`/git/commits/${headSha}`);
+    if(!force){
+      try{const f=await gh(`/contents/data.json?ref=${headSha}`); const cur=JSON.parse(b64utf8(f.content));
+        if(cur&&cur.at&&lastSaved&&lastSaved.at&&cur.at!==lastSaved.at){conflict=true; syncErr=`다른 사람이 ${fmtT(cur.at)}에 먼저 저장했어요 — ‘새 저장본 불러오기’로 확인하거나 ‘덮어쓰고 저장’을 누르세요`; pendingRemote=cur; return;}
+      }catch(e){if(e.status!==404) throw e;}
+    }
+    const st=JSON.parse(JSON.stringify(S)), tree=[];
+    for(const p of IMG_PATHS()){
+      const im=get(st,p); if(!im) continue;
+      if(!im.path&&im.src&&im.src.startsWith('data:')){
+        const ext=im.type==='image/png'?'png':'jpg', path=`images/${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}.${ext}`;
+        const blob=await gh('/git/blobs',{method:'POST',body:{content:im.src.slice(im.src.indexOf(',')+1),encoding:'base64'}});
+        tree.push({path,mode:'100644',type:'blob',sha:blob.sha}); im.path=path;
+      }
+      delete im.src; if(!im.path) set(st,p,null);
+    }
+    const data={state:st,lim:JSON.parse(JSON.stringify(L)),at:Date.now()};
+    const dj=await gh('/git/blobs',{method:'POST',body:{content:JSON.stringify(data,null,1),encoding:'utf-8'}});
+    tree.push({path:'data.json',mode:'100644',type:'blob',sha:dj.sha});
+    const nt=await gh('/git/trees',{method:'POST',body:{base_tree:head.tree.sha,tree}});
+    const nc=await gh('/git/commits',{method:'POST',body:{message:`브랜드검색 내용 저장 (${fmtT(data.at)})`,tree:nt.sha,parents:[headSha]}});
+    await gh(`/git/refs/heads/${REPO.branch}`,{method:'PATCH',body:{sha:nc.sha}});
+    IMG_PATHS().forEach(p=>{const a=get(st,p), b=get(S,p); if(a&&b&&a.path&&!b.path) b.path=a.path;});
+    lastSaved=data; savedHereAt=Date.now(); pendingRemote=null; conflict=false; lastSent=curJson();
+    renderSlots();
+  }catch(e){
+    const s=e.status;
+    syncErr=s===401?'토큰이 올바르지 않거나 만료됐어요 — 저장 설정에서 다시 넣어 주세요'
+      :(s===403||s===404)?'이 토큰으로는 저장소에 쓸 수 없어요 — 저장소 선택과 Contents 읽기/쓰기 권한을 확인하세요'
+      :(s===409||s===422)?'저장 중 다른 저장과 겹쳤어요 — 저장하기를 다시 눌러 주세요'
+      :`저장하지 못했어요 (${s||e.message}) — 인터넷 연결을 확인하고 다시 눌러 주세요`;
+  }finally{writing=false; refreshDirty();}
+}
+
+/* ---------- token dialog ---------- */
+function openToken(msg){
+  $('#repoName').textContent=`${REPO.owner}/${REPO.repo}`;
+  $('#tokIn').value=''; $('#tokMsg').textContent=msg||''; $('#tokState').textContent=getToken()?'이 PC에 저장됨':'없음';
+  $('#ovTok').hidden=false; setTimeout(()=>$('#tokIn').focus(),50);
+}
+$('#btnToken').addEventListener('click',()=>openToken());
+$('#btnTokSave').addEventListener('click',async()=>{
+  const v=$('#tokIn').value.trim(); if(!v){$('#tokMsg').textContent='토큰을 붙여 넣어 주세요'; return;}
+  $('#tokMsg').textContent='확인 중…';
+  try{
+    const r=await fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.repo}`,{headers:{'Authorization':'Bearer '+v,'Accept':'application/vnd.github+json'},cache:'no-store'});
+    if(!r.ok) throw r.status; const j=await r.json();
+    if(j.permissions&&j.permissions.push===false){$('#tokMsg').textContent='이 토큰은 읽기만 가능해요 — Contents: Read and write로 다시 만들어 주세요'; return;}
+    try{localStorage.setItem(TOKEN_KEY,v);}catch(e){$('#tokMsg').textContent='이 브라우저에 저장할 수 없어요 (시크릿 창인지 확인)'; return;}
+    $('#ovTok').hidden=true; syncErr=''; renderSaveUI(); if(dirty) saveNow();
+  }catch(s){$('#tokMsg').textContent=s===401?'토큰이 올바르지 않아요':s===404?'이 토큰으로 저장소를 찾을 수 없어요 — 저장소 선택을 확인하세요':'확인하지 못했어요 — 인터넷 연결을 확인하세요';}
+});
+$('#btnTokDel').addEventListener('click',()=>{try{localStorage.removeItem(TOKEN_KEY);}catch(e){} $('#tokState').textContent='없음'; $('#tokMsg').textContent='이 PC에서 토큰을 지웠어요';});
+
+/* ---------- 요청서 다운로드 (요청서.txt + 규격 이미지 ZIP) ---------- */
+const safeName=s=>String(s||'').replace(/[\\/:*?"<>|\s]+/g,'').slice(0,20)||'이미지';
+function collectImages(){
+  const out=[], n=+S.tabCount||2, ext=im=>im.type==='image/png'?'png':'jpg';
+  if(S.home.logo) out.push({p:'home.logo',img:S.home.logo,file:`01_로고_${S.home.logo.w}x${S.home.logo.h}.${ext(S.home.logo)}`});
+  if(S.main.img) out.push({p:'main.img',img:S.main.img,file:`02_메인_${S.main.img.w}x${S.main.img.h}.${ext(S.main.img)}`});
+  for(let t=0;t<n;t++) S.tabs[t].items.forEach((x,i)=>{ if(x.img) out.push({p:`tabs.${t}.items.${i}.img`,img:x.img,file:`03_탭${t+1}-${i+1}_${safeName(x.text)}_${x.img.w}x${x.img.h}.${ext(x.img)}`}); });
+  return out;
+}
+async function imgBlob(img){ if(img.src&&img.src.startsWith('data:')) return dataURLtoBlob(img.src); const u=img.path||img.src; if(!u) return null; const r=await fetch(u); return r.ok?await r.blob():null; }
+function buildRequest(files){
+  const n=+S.tabCount||2, d=new Date(), ds=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const fileOf=p=>{const f=files.find(x=>x.p===p); return f?f.file:null;};
+  const imgLine=(p,fallback)=>{const f=fileOf(p); return f?`${f} (images 폴더 첨부)`:fallback;};
+  const o=[];
+  o.push('■ 네이버 브랜드검색 모바일 라이트형 세팅 요청 — 착한구두',`작성일: ${ds}`+(lastSaved&&lastSaved.at?` (최종 저장 ${fmtT(lastSaved.at)} 기준)`:''),'');
+  o.push('[1] 홈링크 영역',` - 로고 이미지: ${imgLine('home.logo','미첨부 (별도 전달)')}`,` - 링크: ${S.home.link}`); if(S.home.ref) o.push(` - 참고: ${S.home.ref}`); o.push('');
+  o.push('[2] 슬로건 영역 (홈링크와 링크 동일)',` - 문구: ${S.slogan.text}`,'');
+  o.push('[3] 브랜드 이벤트 영역',` - 라벨: ${S.event.label}`,` - 문구: ${S.event.text}`,` - 링크: ${S.event.link}`,'');
+  o.push('[4] 메인 콘텐츠 영역',` - 이미지(208×208): ${imgLine('main.img','미첨부 (별도 전달)')}`); if(S.main.ref) o.push(` - 참고: ${S.main.ref}`);
+  o.push(` - 서브타이틀: ${S.main.sub}`,` - 타이틀: ${S.main.title}`,` - 설명문구 1줄: ${S.main.d1}`,` - 설명문구 2줄: ${S.main.d2}`,` - 링크: ${S.main.link}`,'');
+  o.push(`[5] 서브 콘텐츠 영역 (탭 ${n}개, 탭별 썸네일 3개)`);
+  for(let t=0;t<n;t++){const tb=S.tabs[t]; o.push(` ▶ 탭${t+1}: ${tb.name}`); tb.items.forEach((x,i)=>{o.push(`   ${i+1}) ${x.text}`,`      링크: ${x.link}`,`      이미지(240×240): ${imgLine(`tabs.${t}.items.${i}.img`,'미첨부 — 링크 상품 대표컷으로 제작 요청')}`);});}
+  o.push('');
+  const hd=String(S.sns.handle||'').trim().replace(/^@/,'');
+  o.push('[6] 브랜드 SNS 소식 영역 (선택)');
+  if(hd) o.push(` - 인스타그램: @${hd} (https://www.instagram.com/${hd}/)`,' - 요청: SNS 소식 영역 사용 및 위 계정 연동, 연동 조건·반영 주기 회신 부탁드립니다.'); else o.push(' - 사용 안 함');
+  o.push('');
+  const {per,all}=lastIssues; let E=0,W=0; Object.values(per).forEach(x=>{E+=x.err;W+=x.warn;});
+  o.push(`[자체 검수 결과] 위반 ${E}건 · 주의 ${W}건`);
+  all.forEach(x=>o.push(` - (${x.lv==='err'?'위반':'주의'}) ${AREAS[x.area].name} / ${x.label}: ${x.msg}`));
+  return o.join('\r\n');
+}
+function saveBlob(b,name){const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1500);}
+$('#btnReq').addEventListener('click',async()=>{
+  const btn=$('#btnReq'); btn.disabled=true; btn.textContent='파일 만드는 중…';
+  const d=new Date(), ymd=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  try{
+    const files=collectImages(), text='﻿'+buildRequest(files);
+    if(window.JSZip){
+      const zip=new JSZip(); zip.file('요청서.txt',text);
+      for(const f of files){const b=await imgBlob(f.img); if(b) zip.file('images/'+f.file,b);}
+      saveBlob(await zip.generateAsync({type:'blob'}),`착한구두_브랜드검색_요청서_${ymd}.zip`);
+    } else saveBlob(new Blob([text],{type:'text/plain;charset=utf-8'}),`착한구두_브랜드검색_요청서_${ymd}.txt`);
+  }catch(e){syncErr='요청서 파일을 만들지 못했어요 — 다시 눌러 주세요'; renderSaveUI();}
+  finally{btn.disabled=false; btn.textContent='요청서 다운로드';}
+});
+
+/* ---------- limits modal ---------- */
+function buildLimits(){
+  $('#limGrid').innerHTML=LIM_META.map(([k,label,src])=>`<div class="fld"><div class="fld-h"><label for="lim-${k}">${label}</label><span class="src ${src}">${src==='pdf'?'PDF 확인':'원문 확인'}</span></div><input id="lim-${k}" data-lim="${k}" type="${k==='allowed'?'text':'number'}" min="1" value="${esc(L[k])}"></div>`).join('')
+  +`<div class="fld"><div class="fld-h"><label for="lim-countSpaces">글자 수에 공백 포함</label></div><select id="lim-countSpaces" data-lim="countSpaces"><option value="1"${L.countSpaces?' selected':''}>공백 포함</option><option value="0"${L.countSpaces?'':' selected'}>공백 제외</option></select></div>`;
+}
+
+function update(){renderPreview(); renderSlots(); requestAnimationFrame(()=>{measure(); runChecks(); refreshDirty();});}
+
+/* ---------- events ---------- */
+buildEditor(); fill(); $('#editor').inert=true; update();
+const ed=$('#editor');
+ed.addEventListener('input',e=>{const t=e.target,p=t.dataset.path; if(!p) return; set(S,p,t.type==='checkbox'?t.checked:(p==='tabCount'?+t.value:t.value)); update();});
+ed.addEventListener('change',e=>{const t=e.target; if(t.dataset.file){readImage(t.files[0],t.dataset.file); t.value='';} else if(t.dataset.path==='tabCount'){S.tabCount=+t.value;update();}});
+ed.addEventListener('click',e=>{const b=e.target.closest('[data-rm]'); if(b){set(S,b.dataset.rm,null); update();}});
+ed.addEventListener('dragover',e=>{const s=e.target.closest('[data-slot]'); if(s){e.preventDefault(); s.classList.add('drag');}});
+ed.addEventListener('dragleave',e=>{const s=e.target.closest('[data-slot]'); if(s) s.classList.remove('drag');});
+ed.addEventListener('drop',e=>{const s=e.target.closest('[data-slot]'); if(!s) return; e.preventDefault(); s.classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f) readImage(f,s.dataset.slot);});
+function goArea(a){const s=$('#sec-'+a); if(!s) return; s.scrollIntoView({behavior:'smooth',block:'start'}); s.classList.add('flash'); setTimeout(()=>s.classList.remove('flash'),1200);}
+$('#pv').addEventListener('click',e=>{const tb=e.target.closest('[data-pvtab]'); if(tb){pvTab=+tb.dataset.pvtab; update(); return;} const a=e.target.closest('[data-area]'); if(a) goArea(a.dataset.area);});
+$('#sum').addEventListener('click',e=>{const r=e.target.closest('[data-go]'); if(r) goArea(r.dataset.go);});
+$('#btnLimits').addEventListener('click',()=>{buildLimits(); $('#ovLim').hidden=false;});
+$('#limGrid').addEventListener('input',e=>{const k=e.target.dataset.lim; if(!k) return; if(k==='allowed') L[k]=e.target.value; else if(k==='countSpaces') L[k]=e.target.value==='1'; else {const v=parseInt(e.target.value,10); if(v>0) L[k]=v;} update();});
+$('#btnLimReset').addEventListener('click',()=>{L=Object.assign({},DEF_LIM); buildLimits(); update();});
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{$('#'+b.dataset.close).hidden=true;}));
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.hidden=true;}));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.ov').forEach(o=>o.hidden=true);
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault(); saveNow();}
+});
+function arm(btn,label,armedLabel,fn){let on=false,t; btn.addEventListener('click',()=>{ if(!on){on=true; btn.textContent=armedLabel; btn.classList.add('danger'); t=setTimeout(()=>{on=false; btn.textContent=label; btn.classList.remove('danger');},3500); return;} clearTimeout(t); on=false; btn.textContent=label; btn.classList.remove('danger'); fn();});}
+arm($('#btnReset'),'1안으로 되돌리기','한 번 더 누르면 1안으로 바뀌어요',()=>{S=SEED(); pvTab=0; fill(); update();});
+arm($('#btnDiscard'),'변경 취소','한 번 더 누르면 저장본으로 되돌려요',()=>{syncErr=''; if(lastSaved) applyRemote(lastSaved); else {S=SEED(); L=Object.assign({},DEF_LIM); fill(); update();}});
+arm($('#btnLoadRemote'),'새 저장본 불러오기','내 수정이 사라져요. 한 번 더 누르세요',()=>{if(pendingRemote){syncErr=''; applyRemote(pendingRemote);}});
+$('#btnSave').addEventListener('click',saveNow);
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault(); e.returnValue='';}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mode==='ready') loadSaved(false);});
+setInterval(()=>{if(!document.hidden&&mode==='ready'){loadSaved(false); renderSaveUI();}},60000);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>update());
+loadSaved(true);
+})();
+</script>
+</body>
+</html>

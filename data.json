@@ -1,0 +1,205 @@
+{
+ "state": {
+  "event": {
+   "label": "새소식",
+   "link": "https://chaakan.co.kr/member/join.html",
+   "text": "신규가입 시 무료배송 & 4,000원 쿠폰팩"
+  },
+  "home": {
+   "link": "https://chaakan.co.kr/",
+   "logo": {
+    "auto": true,
+    "h": 88,
+    "kb": 2,
+    "name": "CHAAKAN_80x88.png",
+    "oh": 88,
+    "okb": 1,
+    "ow": 80,
+    "type": "image/png",
+    "w": 80,
+    "path": "images/869718044f3bcee58f9365e124019ad2.png"
+   },
+   "ref": "현재 사이트 로고 https://chaakan.co.kr/web/upload/img/footerLogo_ver2.png"
+  },
+  "main": {
+   "d1": "발이 편한 착한구두 공식몰",
+   "d2": "부츠·방한화 신상품 출시",
+   "img": {
+    "auto": true,
+    "h": 208,
+    "kb": 11,
+    "name": "ChatGPT 이미지 2026년 11월 6일 오후 01_32_47.jpg",
+    "oh": 240,
+    "okb": 25,
+    "ow": 240,
+    "type": "image/jpeg",
+    "w": 208,
+    "path": "images/dc17cb2ee1721dc63a1ba3698352e8ef.jpg"
+   },
+   "link": "https://chaakan.co.kr/",
+   "ref": "겨울 화보컷(페탈)",
+   "sub": "STAY IN CHAAKAN",
+   "title": "편하다 그리고 착하다"
+  },
+  "slogan": {
+   "text": "착한구두 공식몰"
+  },
+  "sns": {
+   "checks": {},
+   "handle": "chaakan_official",
+   "posts": [
+    {
+     "img": null,
+     "text": "포근한 퍼안감 방한화, 이번 주 신상으로 만나보세요"
+    },
+    {
+     "img": null,
+     "text": "출근룩에 딱 맞는 로퍼 코디 3가지"
+    }
+   ]
+  },
+  "tabCount": 2,
+  "tabs": [
+   {
+    "items": [
+     {
+      "img": {
+       "auto": true,
+       "h": 240,
+       "kb": 14,
+       "name": "winter_shoes_240x240.jpg",
+       "oh": 240,
+       "okb": 24,
+       "ow": 240,
+       "type": "image/jpeg",
+       "w": 240,
+       "path": "images/0b0c8783626821b5dbced7035ed42a07.jpg"
+      },
+      "link": "https://chaakan.co.kr/product/collection.html",
+      "text": "Collection"
+     },
+     {
+      "img": {
+       "auto": true,
+       "h": 240,
+       "kb": 14,
+       "name": "f3bf82b9-3a85-483d-8daa-221c58a7649b.png",
+       "oh": 1254,
+       "okb": 2006,
+       "ow": 1254,
+       "type": "image/jpeg",
+       "w": 240,
+       "path": "images/91b87cfcb1a0023a4a287a3a3cb5f88b.jpg"
+      },
+      "link": "https://chaakan.co.kr/product/list.html?cate_no=372",
+      "text": "키높이 라인업"
+     },
+     {
+      "img": {
+       "auto": true,
+       "h": 240,
+       "kb": 9,
+       "name": "분홍 붐박스 위의 사색하는 소녀.png",
+       "oh": 1254,
+       "okb": 1803,
+       "ow": 1254,
+       "type": "image/jpeg",
+       "w": 240,
+       "path": "images/51d21866f0ebf8c2afa3c3a84de41803.jpg"
+      },
+      "link": "https://chaakan.co.kr/product/list.html?cate_no=51",
+      "text": "NEW"
+     }
+    ],
+    "name": "26 F/W"
+   },
+   {
+    "items": [
+     {
+      "img": {
+       "auto": true,
+       "h": 240,
+       "kb": 9,
+       "name": "ChatGPT 이미지 2026년 11월 6일 오후 01_43_26.png",
+       "oh": 240,
+       "okb": 43,
+       "ow": 240,
+       "type": "image/jpeg",
+       "w": 240,
+       "path": "images/bce16ce747b5fc7753668c69ea736596.jpg"
+      },
+      "link": "https://chaakan.co.kr/product/list.html?cate_no=56",
+      "text": "부츠/워커"
+     },
+     {
+      "img": {
+       "auto": true,
+       "h": 240,
+       "kb": 8,
+       "name": "cc53bfce4b8a012e42dbf02a60aba486.jpg",
+       "oh": 1000,
+       "okb": 92,
+       "ow": 1000,
+       "type": "image/jpeg",
+       "w": 240,
+       "path": "images/00795cd6a994e1c20e84ed873d456fbb.jpg"
+      },
+      "link": "https://chaakan.co.kr/product/list.html?cate_no=91",
+      "text": "로퍼/블로퍼"
+     },
+     {
+      "img": {
+       "auto": true,
+       "h": 240,
+       "kb": 9,
+       "name": "88570cd3b2459dd22e2bdb8c442a3252.jpg",
+       "oh": 500,
+       "okb": 36,
+       "ow": 500,
+       "type": "image/jpeg",
+       "w": 240,
+       "path": "images/154d516ca2ba420a953120685d5a2fa1.jpg"
+      },
+      "link": "https://chaakan.co.kr/product/list.html?cate_no=156",
+      "text": "윈터슈즈"
+     }
+    ],
+    "name": "BEST"
+   },
+   {
+    "items": [
+     {
+      "img": null,
+      "link": "https://chaakan.co.kr/product/detail.html?product_no=4842",
+      "text": "풀문 방한부츠"
+     },
+     {
+      "img": null,
+      "link": "https://chaakan.co.kr/product/detail.html?product_no=5017",
+      "text": "첼라 방한화"
+     },
+     {
+      "img": null,
+      "link": "https://chaakan.co.kr/product/detail.html?product_no=3710",
+      "text": "포븐 어그슬리퍼"
+     }
+    ],
+    "name": "BEST"
+   }
+  ]
+ },
+ "lim": {
+  "allowed": ".,!?'\"~%&()[]-+/:·",
+  "countSpaces": true,
+  "eventLabel": 4,
+  "eventText": 25,
+  "imgKB": 500,
+  "mainDesc": 20,
+  "mainSub": 15,
+  "mainTitle": 15,
+  "slogan": 12,
+  "tab": 8,
+  "thumb": 10
+ },
+ "at": 1794206018283
+}
