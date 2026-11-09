@@ -192,6 +192,8 @@ a{color:var(--accent)}
 .src{font-size:11px;font-weight:600;border-radius:4px;padding:0 5px}
 .src.pdf{background:var(--ok-bg);color:var(--ok)}
 .src.tbd{background:var(--warn-bg);color:var(--warn)}
+.src.ok{background:var(--accent-soft);color:var(--accent)}
+.lim-grid .fld input:disabled{opacity:.7;cursor:not-allowed}
 .ov-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
 .ov-foot .msg{margin-right:auto;font-size:12.5px;color:var(--mute)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
@@ -214,7 +216,7 @@ a{color:var(--accent)}
     </div>
   </div>
 </header>
-<div class="notice-wrap"><p class="notice">이미지 규격(로고 80~960×88~160px, 메인 208×208px, 서브 240×240px)은 첨부 PDF 기준이고, 글자 수 한도는 기본값이라 각 영역의 ‘가이드 ↗’ 원문과 대조 후 <b>검수 기준</b>에서 수정하세요. 이미지는 아무 크기나 넣으면 규격에 맞게 자동으로 잘라 넣어요(가운데 기준). 수정한 뒤 <b>저장하기</b>(Ctrl+S)를 눌러야 저장되고, 마지막으로 저장한 버전이 모든 PC에 똑같이 보여요. 다른 PC에 반영되기까지 1분 정도 걸려요.</p></div>
+<div class="notice-wrap"><p class="notice">이미지 규격(로고 80~960×88~160px, 메인 208×208px, 서브 240×240px)은 첨부 PDF 기준이에요. 탭 이름·썸네일 텍스트는 가이드 확인값 <b>최대 7자</b>로 고정했고, 나머지 글자 수 한도는 기본값이라 각 영역의 ‘가이드 ↗’ 원문과 대조가 필요해요. 이미지는 아무 크기나 넣으면 규격에 맞게 자동으로 잘라 넣어요(가운데 기준). 수정한 뒤 <b>저장하기</b>(Ctrl+S)를 눌러야 저장되고, 마지막으로 저장한 버전이 모든 PC에 똑같이 보여요. 다른 PC에 반영되기까지 1분 정도 걸려요.</p></div>
 
 <main class="wrap">
   <section class="editor" id="editor" aria-label="영역별 입력"></section>
@@ -230,7 +232,7 @@ a{color:var(--accent)}
 <div class="ov" id="ovLim" hidden>
   <div class="ov-box" role="dialog" aria-modal="true" aria-labelledby="limTitle">
     <h3 id="limTitle">검수 기준</h3>
-    <p class="sec-note" style="margin:0"><span class="src pdf">PDF 확인</span> 첨부 PDF에 표기된 값 · <span class="src tbd">원문 확인</span> 기본값이므로 네이버 가이드 원문과 대조 필요. 바꾼 기준도 저장하기를 눌러야 모두에게 반영돼요.</p>
+    <p class="sec-note" style="margin:0"><span class="src ok">가이드 확인 · 고정</span> 네이버 가이드로 확인해 고정한 값 · <span class="src pdf">PDF 확인</span> 첨부 PDF에 표기된 값 · <span class="src tbd">원문 확인</span> 기본값이므로 네이버 가이드 원문과 대조 필요. 바꾼 기준도 저장하기를 눌러야 모두에게 반영돼요.</p>
     <div class="lim-grid" id="limGrid"></div>
     <div class="ov-foot"><button class="btn" type="button" id="btnLimReset">기본값 복원</button><button class="btn primary" type="button" data-close="ovLim">적용</button></div>
   </div>
@@ -264,11 +266,11 @@ const AREAS={
   sub:{name:'서브 콘텐츠 영역',guide:'https://ads.naver.com/adguide/1666',c:'var(--a-sub)'},
   sns:{name:'브랜드 SNS 소식 영역',guide:'https://ads.naver.com/adguide/1624',c:'var(--a-sns)'}
 };
-const DEF_LIM={slogan:12,eventLabel:4,eventText:25,mainSub:15,mainTitle:15,mainDesc:20,tab:8,thumb:10,imgKB:500,countSpaces:true,allowed:".,!?'\"~%&()[]-+/:·"};
+const DEF_LIM={slogan:12,eventLabel:4,eventText:25,mainSub:15,mainTitle:15,mainDesc:20,tab:7,thumb:7,imgKB:500,countSpaces:true,allowed:".,!?'\"~%&()[]-+/:·"};
 const LIM_META=[
   ['slogan','슬로건 문구 최대 글자','tbd'],['eventLabel','이벤트 라벨 최대 글자','tbd'],['eventText','이벤트 문구 최대 글자','tbd'],
   ['mainSub','메인 서브타이틀 최대 글자','tbd'],['mainTitle','메인 타이틀 최대 글자','tbd'],['mainDesc','메인 설명문구(줄당) 최대 글자','tbd'],
-  ['tab','탭 이름 최대 글자','tbd'],['thumb','썸네일 텍스트 최대 글자','tbd'],['imgKB','이미지 최대 용량(KB)','tbd'],['allowed','허용 특수문자','tbd']
+  ['tab','탭 이름 최대 글자','ok'],['thumb','썸네일 텍스트 최대 글자','ok'],['imgKB','이미지 최대 용량(KB)','tbd'],['allowed','허용 특수문자','tbd']
 ];
 const P='https://chaakan.co.kr/product/detail.html?product_no=';
 const it=(text,no)=>({img:null,text,link:P+no});
@@ -541,6 +543,7 @@ function applyRemote(data){
   lastSaved=data; pendingRemote=null; conflict=false;
   S=Object.assign(SEED(),deserialize(data.state));
   L=Object.assign({},DEF_LIM,data.lim||{});
+  lockGuideLimits();
   lastSent=curJson();
   fill(true); update();
 }
@@ -675,8 +678,10 @@ $('#btnReq').addEventListener('click',async()=>{
 });
 
 /* ---------- limits modal ---------- */
+// 가이드로 확인된 기준(src 'ok')은 코드에 고정: 저장본의 예전 값이나 편집으로 바뀌지 않음
+function lockGuideLimits(){LIM_META.forEach(([k,,src])=>{if(src==='ok') L[k]=DEF_LIM[k];});}
 function buildLimits(){
-  $('#limGrid').innerHTML=LIM_META.map(([k,label,src])=>`<div class="fld"><div class="fld-h"><label for="lim-${k}">${label}</label><span class="src ${src}">${src==='pdf'?'PDF 확인':'원문 확인'}</span></div><input id="lim-${k}" data-lim="${k}" type="${k==='allowed'?'text':'number'}" min="1" value="${esc(L[k])}"></div>`).join('')
+  $('#limGrid').innerHTML=LIM_META.map(([k,label,src])=>`<div class="fld"><div class="fld-h"><label for="lim-${k}">${label}</label><span class="src ${src}">${src==='ok'?'가이드 확인 · 고정':src==='pdf'?'PDF 확인':'원문 확인'}</span></div><input id="lim-${k}" data-lim="${k}" type="${k==='allowed'?'text':'number'}" min="1" value="${esc(L[k])}"${src==='ok'?' disabled':''}></div>`).join('')
   +`<div class="fld"><div class="fld-h"><label for="lim-countSpaces">글자 수에 공백 포함</label></div><select id="lim-countSpaces" data-lim="countSpaces"><option value="1"${L.countSpaces?' selected':''}>공백 포함</option><option value="0"${L.countSpaces?'':' selected'}>공백 제외</option></select></div>`;
 }
 
@@ -696,7 +701,7 @@ $('#pv').addEventListener('click',e=>{const tb=e.target.closest('[data-pvtab]');
 $('#sum').addEventListener('click',e=>{const r=e.target.closest('[data-go]'); if(r) goArea(r.dataset.go);});
 $('#btnLimits').addEventListener('click',()=>{buildLimits(); $('#ovLim').hidden=false;});
 $('#limGrid').addEventListener('input',e=>{const k=e.target.dataset.lim; if(!k) return; if(k==='allowed') L[k]=e.target.value; else if(k==='countSpaces') L[k]=e.target.value==='1'; else {const v=parseInt(e.target.value,10); if(v>0) L[k]=v;} update();});
-$('#btnLimReset').addEventListener('click',()=>{L=Object.assign({},DEF_LIM); buildLimits(); update();});
+$('#btnLimReset').addEventListener('click',()=>{L=Object.assign({},DEF_LIM); lockGuideLimits(); buildLimits(); update();});
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{$('#'+b.dataset.close).hidden=true;}));
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o) o.hidden=true;}));
 document.addEventListener('keydown',e=>{
